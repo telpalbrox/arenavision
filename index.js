@@ -10,12 +10,18 @@ const PORT = process.env.PORT || 3000;
 const app = express();
 
 app.get('/', async function(req, res) {
-    const agent = request.agent();
-    const response = await agent.get(ARENAVISION_SCHEDULE_URL).set('Cookie', getCookie());
-    const $schedulePage = cheerio.load(response.text);
-    const data = parseSchedulePage($schedulePage);
-    const data2 = mapChannels(data, agent);
-    res.status(200).json(await getChannelsUrls(data2));
+    res.status(200).json(await getArenavision());
+});
+
+app.get('/html', async function(req, res) {
+    res.send(`
+    <body>
+    <style>
+    body { white-space: pre; font-family: monospace; }
+    </style>
+    ${JSON.stringify(await getArenavision(), null, 4)}
+    </body>
+    `);
 });
 
 app.listen(PORT, function(err) {
@@ -37,7 +43,7 @@ function parseSchedulePage($schedulePage) {
         const event = {};
         $row.find('td').each((index, column) => {
             const $column = $schedulePage(column);
-            event[columnsName[index]] = $column.text();
+            event[columnsName[index]] = $column.text().replace(/\n/gi, ' ').replace(/\t/gi, '').trim();
         });
         return event;
     }).get();
@@ -92,6 +98,14 @@ async function getChannelsUrls(arenaVisionResponse) {
         }
     }
     return arenaVisionResponse;
+}
+
+async function getArenavision() {
+    const response = await request.get(ARENAVISION_SCHEDULE_URL).set('Cookie', getCookie());
+    const $schedulePage = cheerio.load(response.text);
+    const data = parseSchedulePage($schedulePage);
+    const data2 = mapChannels(data);
+    return await getChannelsUrls(data2);
 }
 
 function getCookie() {
