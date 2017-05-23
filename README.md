@@ -1,3 +1,3 @@
-# Unnoficial Arenavision API
+# Unofficial Arenavision API
 
-Unnoficial API for [Arenavision](https://arenavision.in/)
+Unofficial API for [Arenavision](https://arenavision.in/)
