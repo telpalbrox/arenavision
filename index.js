@@ -2,17 +2,20 @@ const express = require('express');
 const request = require('superagent');
 const cheerio = require('cheerio');
 
-const ARENAVISION_URL = 'https://arenavision.in/schedule';
+const ARENAVISION_URL = 'https://arenavision.in/';
+const ARENAVISION_SCHEDULE_URL = `${ARENAVISION_URL}/schedule`
+const ARENAVISION_CHANNEL_URL = `${ARENAVISION_URL}/av`;
 const PORT = process.env.PORT || 3000;
 
 const app = express();
 
 app.get('/', async function(req, res) {
     const agent = request.agent();
-    const response = await agent.get(ARENAVISION_URL).set('Cookie', getCookie());
+    const response = await agent.get(ARENAVISION_SCHEDULE_URL).set('Cookie', getCookie());
     const $schedulePage = cheerio.load(response.text);
     const data = parseSchedulePage($schedulePage);
-    res.status(200).json(mapChannels(data, agent));
+    const data2 = mapChannels(data, agent);
+    res.status(200).json(await getChannelsUrls(data2));
 });
 
 app.listen(PORT, function(err) {
@@ -53,7 +56,7 @@ function mapChannels(arenaVisionResponse, agent) {
                 const channelNumber = parseInt(channelNumberString, 10);
                 const language = rawChannelsArray[index + 1] && rawChannelsArray[index + 1].replace(/[\[\]]+/gi, '');
                 channel = {
-                    channelNumber,
+                    number: channelNumber,
                     language
                 };
             });
@@ -61,6 +64,34 @@ function mapChannels(arenaVisionResponse, agent) {
         }).filter((channel) => !!channel);
         return event;
     });
+}
+
+const channelCache = {};
+
+async function getChannelUrl(channelNumber) {
+    if (channelCache[channelNumber]) {
+        return channelCache[channelNumber];
+    }
+    try {
+        var response = await request.get(`${ARENAVISION_CHANNEL_URL}${channelNumber}`).set('Cookie', getCookie());
+    } catch (e) {
+        return null;
+    }
+    const $channelPage = cheerio.load(response.text);
+    const url = $channelPage('p.auto-style1 a').attr('href');
+    channelCache[channelNumber] = url;
+    return url;
+}
+
+async function getChannelsUrls(arenaVisionResponse) {
+    for(let i = 0; i < arenaVisionResponse.length; i++) {
+        const event = arenaVisionResponse[i];
+        for(let j = 0; j < event.channels.length; j++) {
+            const channel = event.channels[j];
+            channel.url = await getChannelUrl(channel.number);
+        }
+    }
+    return arenaVisionResponse;
 }
 
 function getCookie() {
