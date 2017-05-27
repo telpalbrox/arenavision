@@ -3,7 +3,7 @@ const request = require('superagent');
 const cheerio = require('cheerio');
 
 const ARENAVISION_URL = 'https://arenavision.in/';
-const ARENAVISION_SCHEDULE_URL = `${ARENAVISION_URL}/schedule`
+const ARENAVISION_SCHEDULE_URL = `${ARENAVISION_URL}/guide`
 const ARENAVISION_CHANNEL_URL = `${ARENAVISION_URL}/av`;
 const PORT = process.env.PORT || 3000;
 
