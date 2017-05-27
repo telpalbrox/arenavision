@@ -10,25 +10,26 @@
 
 <body>
     <div class="app">
-        <input type="text" v-model="search" placeholder="search"><br>
-        <ul>
-            <li v-for="event in arenavisionResults">
-                {{ event.day }}
-                -
-                {{ event.sport }}
-                -
-                {{ event.competition }}
-                -
-                {{ event.title }}
-                -
-                <template v-for="(channel, index) in event.channels">
-                    <a :href="channel.url">{{ channel.language }}</a>
-                    <template v-if="index !== event.channels.length - 1">
-                        -
+        <template v-if="arenavision">
+            <input type="text" v-model="search" placeholder="search"><br>
+            <ul>
+                <li v-for="event in arenavisionResults">
+                    {{ event.day }} - {{ event.sport }} - {{ event.competition }} - {{ event.title }} -
+                    <template v-for="(channel, index) in event.channels">
+                        <a :href="channel.url">{{ channel.language }}</a>
+                        <template v-if="index !== event.channels.length - 1">
+                            -
+                        </template>
                     </template>
-                </template>
-            </li>
-        </ul>
+                </li>
+            </ul>
+        </template>
+        <template v-if="loading && !error">
+            Loading...
+        </template>
+        <template v-if="error">
+            Error
+        </template>
     </div>
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.3.3/vue.js"></script>
     <script defer src="app.js"></script>

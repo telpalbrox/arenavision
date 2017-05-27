@@ -1,11 +1,24 @@
 new Vue({
     el: '.app',
     data: {
-        arenavision: [],
-        search: ''
+        arenavision: null,
+        search: '',
+        error: false,
+        loading: true
     },
     mounted() {
-        fetch('/json').then((response) => response.json()).then((response) => this.arenavision = response).catch((err) => console.error(err));
+        fetch('/json')
+        .then((response) => response.json())
+        .then((response) => {
+            this.arenavision = response;
+            this.loading = false;
+            this.error = false;
+        })
+        .catch((err) => {
+            this.loading = false;
+            this.error = true;
+            console.error(err);
+        });
     },
     computed: {
         arenavisionResults() {
