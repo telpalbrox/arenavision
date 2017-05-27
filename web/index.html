@@ -1,0 +1,37 @@
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Arenavision Unofficial</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <!--<link rel="stylesheet" href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css">-->
+    <link rel="stylesheet" href="app.css">
+</head>
+
+<body>
+    <div class="app">
+        <input type="text" v-model="search" placeholder="search"><br>
+        <ul>
+            <li v-for="event in arenavisionResults">
+                {{ event.day }}
+                -
+                {{ event.sport }}
+                -
+                {{ event.competition }}
+                -
+                {{ event.title }}
+                -
+                <template v-for="(channel, index) in event.channels">
+                    <a :href="channel.url">{{ channel.language }}</a>
+                    <template v-if="index !== event.channels.length - 1">
+                        -
+                    </template>
+                </template>
+            </li>
+        </ul>
+    </div>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.3.3/vue.js"></script>
+    <script defer src="app.js"></script>
+</body>
+
+</html>

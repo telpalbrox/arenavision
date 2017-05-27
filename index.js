@@ -1,6 +1,8 @@
+const path = require('path');
 const express = require('express');
 const request = require('superagent');
 const cheerio = require('cheerio');
+const serveStatic = require('serve-static');
 
 const ARENAVISION_URL = 'https://arenavision.in/';
 const ARENAVISION_SCHEDULE_URL = `${ARENAVISION_URL}/guide`
@@ -9,7 +11,9 @@ const PORT = process.env.PORT || 3000;
 
 const app = express();
 
-app.get('/', async function(req, res) {
+app.use(serveStatic(path.join(__dirname, 'web')));
+
+app.get('/json', async function(req, res) {
     res.status(200).json(await getArenavision());
 });
 
@@ -43,7 +47,7 @@ function parseSchedulePage($schedulePage) {
         const event = {};
         $row.find('td').each((index, column) => {
             const $column = $schedulePage(column);
-            event[columnsName[index]] = $column.text().replace(/\n/gi, ' ').replace(/\t/gi, '').trim();
+            event[columnsName[index]] = toTitleCase($column.text().replace(/\n/gi, ' ').replace(/\t/gi, '').trim());
         });
         return event;
     }).get();
@@ -114,4 +118,8 @@ function getCookie() {
     time += 19360000 * 1000;
     now.setTime(time);
     return 'beget=begetok' + '; expires=' + now.toGMTString() + '; path=/';
+}
+
+function toTitleCase(string) {
+    return string.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
 }
