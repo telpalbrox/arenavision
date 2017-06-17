@@ -31,6 +31,26 @@ new Vue({
                     || event.title.toLowerCase().includes(search)
                     || event.competition.toLowerCase().includes(search)
             });
+        },
+        sports() {
+            const sports = [];
+            this.arenavision.forEach((event) => {
+                if (!sports.includes(event.sport)) {
+                    sports.push(event.sport);
+                }
+            });
+            return sports;
+        }
+    },
+    methods: {
+        selectSport(sport) {
+            if (this.isSportSelected(sport)) {
+                return this.search = '';
+            }
+            this.search = sport;
+        },
+        isSportSelected(sport) {
+            return sport === this.search;
         }
     }
 });

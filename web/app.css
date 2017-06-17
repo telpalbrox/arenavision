@@ -1,3 +1,30 @@
-li {
+.app {
+    padding-top: 60px;
+    padding-bottom: 8px;
+    padding-left: 8px;
+    padding-right: 8px;
+}
+
+@media all and (max-width: 60em) {
+    .au-menu-button {
+        width: 100%;
+    }
+}
+
+.au-menu-button.au-menu-button-active,
+.au-menu-button.au-menu-button-active:focus,
+.au-menu-button.au-menu-button-active:hover {
+    box-shadow: inset 0px 0px 0px 99em rgba(17,17,17,0.2);
+}
+
+.au-event-list {
+    padding-left: 0;
+}
+
+.au-event {
     text-transform: capitalize;
+    list-style: none;
+    border-radius: 1em;
+    background: #FAFAFA;
+    margin-bottom: 8px;
 }
