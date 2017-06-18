@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <title>Arenavision Unofficial</title>
     <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/picnicss/6.3.2/picnic.min.css">
     <link rel="stylesheet" href="app.css">
 </head>
@@ -11,22 +12,23 @@
 <body>
     <div class="app">
         <nav>
-            <a href="#" class="brand">
+            <div class="brand">
                 <span>Arenavision Unofficial</span>
-            </a>
+            </div>
             <!-- responsive-->
             <input id="bmenub" type="checkbox" class="show">
             <label for="bmenub" class="burger pseudo button">&#9776;</label>
             <div class="menu">
                 <template v-if="arenavision">
                     <button v-for="sport of sports" v-on:click="selectSport(sport)"
-                    href="#" :class="{ 'au-menu-button-active': isSportSelected(sport) }" class="pseudo button au-menu-button">{{ sport }}</button>
+                            :class="{ 'au-menu-button-active': isSportSelected(sport) }"
+                            class="pseudo button au-menu-button">{{ sport }}</button>
                 </template>
             </div>
         </nav>
         <template v-if="arenavision">
             <input type="text" v-model="search" placeholder="search"><br>
-            <ul class="au-event-list">
+            <ul class="au-event-list" v-if="arenavisionResults.length">
                 <li class="au-event" v-for="event of arenavisionResults">
                     {{ event.day }} - {{ event.sport }} - {{ event.competition }} - {{ event.title }} -
                     <template v-for="(channel, index) of event.channels">
@@ -37,9 +39,14 @@
                     </template>
                 </li>
             </ul>
+            <div v-else>
+                No results
+            </div>
         </template>
         <template v-if="loading && !error">
-            Loading...
+            <div class="au-loading">
+                <i class="fa fa-refresh fa-spin fa-3x fa-fw"></i>
+            </div>
         </template>
         <template v-if="error">
             Error
