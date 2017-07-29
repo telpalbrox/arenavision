@@ -4,7 +4,7 @@ const request = require('superagent');
 const cheerio = require('cheerio');
 const serveStatic = require('serve-static');
 
-const ARENAVISION_URL = 'https://arenavision.in/';
+const ARENAVISION_URL = process.env.ARENAVISION_URL || 'http://arenavision.in';
 const ARENAVISION_SCHEDULE_URL = `${ARENAVISION_URL}/guide`
 const ARENAVISION_CHANNEL_URL = `${ARENAVISION_URL}/av`;
 const PORT = process.env.PORT || 3000;
@@ -14,7 +14,12 @@ const app = express();
 app.use(serveStatic(path.join(__dirname, 'web')));
 
 app.get('/json', async function(req, res) {
-    res.status(200).json(await getArenavision());
+    try {
+        res.status(200).json(await getArenavision());
+    } catch (err) {
+        console.error(err);
+        res.sendStatus(500);
+    }
 });
 
 app.get('/html', async function(req, res) {
