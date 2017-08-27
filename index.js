@@ -5,8 +5,7 @@ const cheerio = require('cheerio');
 const serveStatic = require('serve-static');
 
 const ARENAVISION_URL = process.env.ARENAVISION_URL || 'http://arenavision.in';
-const ARENAVISION_SCHEDULE_URL = `${ARENAVISION_URL}/guide`
-const ARENAVISION_CHANNEL_URL = `${ARENAVISION_URL}/av`;
+const ARENAVISION_SCHEDULE_URL = `${ARENAVISION_URL}/guide`;
 const PORT = process.env.PORT || 3000;
 
 const app = express();
@@ -68,6 +67,9 @@ function mapChannels(arenaVisionResponse, agent) {
             }
             let channel = null;
             rawChannel.split('-').forEach((channelNumberString) => {
+                if (channelNumberString === '') {
+                    return;
+                }
                 const channelNumber = parseInt(channelNumberString, 10);
                 const language = rawChannelsArray[index + 1] && rawChannelsArray[index + 1].replace(/[\[\]]+/gi, '');
                 channel = {
@@ -87,9 +89,12 @@ async function getChannelUrl(channelNumber) {
     if (channelCache[channelNumber]) {
         return channelCache[channelNumber];
     }
+    const channelNumberString = String(channelNumber).padStart(2, '0');
     try {
-        var response = await request.get(`${ARENAVISION_CHANNEL_URL}${channelNumber}`).set('Cookie', getCookie());
-    } catch (e) {
+        var response = await request.get(`${ARENAVISION_URL}/${channelNumberString}`).set('Cookie', getCookie());
+    } catch (err) {
+        console.error(`Error getting channel ${channelNumberString}`);
+        console.error(err);
         return null;
     }
     const $channelPage = cheerio.load(response.text);
