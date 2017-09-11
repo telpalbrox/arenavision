@@ -5,7 +5,7 @@ const cheerio = require('cheerio');
 const serveStatic = require('serve-static');
 
 const ARENAVISION_URL = process.env.ARENAVISION_URL || 'http://arenavision.in';
-const ARENAVISION_SCHEDULE_URL = `${ARENAVISION_URL}/guide`;
+const ARENAVISION_SCHEDULE_URL = `${ARENAVISION_URL}/iguide`;
 const PORT = process.env.PORT || 3000;
 
 const app = express();
