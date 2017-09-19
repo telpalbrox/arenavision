@@ -1,0 +1,10 @@
+:host {
+    font-size: 1.1em;
+    line-height: 1.5;
+}
+
+* {
+    box-sizing: border-box;
+    font-family: Arial, Helvetica, sans-serif;
+    color: #111;
+}
