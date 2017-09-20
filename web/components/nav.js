@@ -1,4 +1,4 @@
-class AppNav extends HTMLElement {
+export class AppNav extends HTMLElement {
     static get template() {
         return `
             <link rel="stylesheet" href="./styles.css">

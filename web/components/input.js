@@ -1,4 +1,4 @@
-class Input extends HTMLElement {
+export class Input extends HTMLElement {
     static get template() {
         return `
             <link rel="stylesheet" href="./styles.css">
@@ -12,7 +12,6 @@ class Input extends HTMLElement {
                     border: 1px solid #ccc;
                     background: #fff;
                     border-radius: .2em;
-                    transition: all 0.3s;
                     width: 100%;
                     font-size: 1.1em;
                 }
@@ -26,7 +25,7 @@ class Input extends HTMLElement {
         super();
         this._shadowRoot = this.attachShadow({ mode: 'open' });
         this._shadowRoot.innerHTML = Input.template;
-        this.inputElement = this._shadowRoot.querySelector('input');
+        this._inputElement = this._shadowRoot.querySelector('input');
     }
     attributeChangedCallback(name, oldValue, newValue) {
         if (name === 'placeholder') {
@@ -34,13 +33,19 @@ class Input extends HTMLElement {
         }
     }
     renderPlaceholder(newPlaceholder) {
-        this.inputElement.placeholder = newPlaceholder;
+        this._inputElement.placeholder = newPlaceholder;
     }
     get placeholder() {
         return this.getAttribute('placeholder');
     }
     set placeholder(placeholder) {
         this.setAttribute('placeholder', brand);
+    }
+    get value() {
+        return this._inputElement.value;
+    }
+    set value(value) {
+        this._inputElement.value = value;
     }
 }
 

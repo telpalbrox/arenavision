@@ -1,4 +1,4 @@
-class NavItem extends HTMLElement {
+export class NavItem extends HTMLElement {
     static get template() {
         return `
             <link rel="stylesheet" href="./styles.css">
@@ -15,7 +15,6 @@ class NavItem extends HTMLElement {
                     user-select: none;
                     margin: .3em 0;
                     cursor: pointer;
-                    transition: all 0.3s;
                     border-radius: .2em;
                     height: auto;
                     box-shadow: 0 0 transparent inset;
