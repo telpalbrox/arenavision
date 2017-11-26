@@ -59,7 +59,7 @@ function parseSchedulePage($schedulePage) {
 
 function mapChannels(arenaVisionResponse, agent) {
     return arenaVisionResponse.map((event) => {
-        const rawChannels = event.channels;
+        const rawChannels = event.channels || '';
         const rawChannelsArray = rawChannels.replace(/\n/gi, ' ').replace(/\t/gi, '').split(' ');
         event.channels = rawChannelsArray.map((rawChannel, index) => {
             if (rawChannel[0] === '[') {
