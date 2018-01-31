@@ -5,7 +5,8 @@ const cheerio = require('cheerio');
 const serveStatic = require('serve-static');
 
 const ARENAVISION_URL = process.env.ARENAVISION_URL || 'http://arenavision.in';
-const ARENAVISION_SCHEDULE_URL = `${ARENAVISION_URL}/iguide`;
+const ARENAVISION_SCHEDULE_PATH = process.env.ARENAVISION_SCHEDULE_PATH || 'e-guide';
+const ARENAVISION_SCHEDULE_URL = `${ARENAVISION_URL}/${ARENAVISION_SCHEDULE_PATH}`;
 const PORT = process.env.PORT || 3000;
 
 const app = express();
@@ -54,7 +55,7 @@ function parseSchedulePage($schedulePage) {
             event[columnsName[index]] = toTitleCase($column.text().replace(/\n/gi, ' ').replace(/\t/gi, '').trim());
         });
         return event;
-    }).get();
+    }).get().filter((event) => !!event.day);
 }
 
 function mapChannels(arenaVisionResponse, agent) {
@@ -85,13 +86,13 @@ function mapChannels(arenaVisionResponse, agent) {
 
 const channelCache = {};
 
-async function getChannelUrl(channelNumber) {
+async function getChannelAcestreamUrl(channelNumber, channelUrl) {
     if (channelCache[channelNumber]) {
         return channelCache[channelNumber];
     }
     const channelNumberString = String(channelNumber).padStart(2, '0');
     try {
-        var response = await request.get(`${ARENAVISION_URL}/${channelNumberString}`).set('Cookie', getCookie());
+        var response = await request.get(channelUrl).set('Cookie', getCookie());
     } catch (err) {
         console.error(`Error getting channel ${channelNumberString}`);
         console.error(err);
@@ -103,12 +104,12 @@ async function getChannelUrl(channelNumber) {
     return url;
 }
 
-async function getChannelsUrls(arenaVisionResponse) {
+async function getAcestreamChannelsUrls(arenaVisionResponse, channelsUrls) {
     for(let i = 0; i < arenaVisionResponse.length; i++) {
         const event = arenaVisionResponse[i];
         for(let j = 0; j < event.channels.length; j++) {
             const channel = event.channels[j];
-            channel.url = await getChannelUrl(channel.number);
+            channel.url = await getChannelAcestreamUrl(channel.number, channelsUrls.get(channel.number));
         }
     }
     return arenaVisionResponse;
@@ -117,9 +118,20 @@ async function getChannelsUrls(arenaVisionResponse) {
 async function getArenavision() {
     const response = await request.get(ARENAVISION_SCHEDULE_URL).set('Cookie', getCookie());
     const $schedulePage = cheerio.load(response.text);
+    const channelsUrls = getChanelsUrls($schedulePage);
     const data = parseSchedulePage($schedulePage);
     const data2 = mapChannels(data);
-    return await getChannelsUrls(data2);
+    return await getAcestreamChannelsUrls(data2, channelsUrls);
+}
+
+function getChanelsUrls($schedulePage) {
+    const $chanelLinks = $schedulePage('li.expanded li a');
+    const channelsUrls = new Map();
+    $chanelLinks.each((index, link) => {
+        const $link = $schedulePage(link);
+        channelsUrls.set(parseInt($link.text().replace(/ArenaVision /gi, ''), 10), $link.attr('href'));
+    });
+    return channelsUrls;
 }
 
 function getCookie() {
