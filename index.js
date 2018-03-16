@@ -5,7 +5,7 @@ const cheerio = require('cheerio');
 const serveStatic = require('serve-static');
 
 const ARENAVISION_URL = process.env.ARENAVISION_URL || 'http://arenavision.in';
-const ARENAVISION_SCHEDULE_PATH = process.env.ARENAVISION_SCHEDULE_PATH || 'e-guide';
+const ARENAVISION_SCHEDULE_PATH = process.env.ARENAVISION_SCHEDULE_PATH || 'guide';
 const ARENAVISION_SCHEDULE_URL = `${ARENAVISION_URL}/${ARENAVISION_SCHEDULE_PATH}`;
 const PORT = process.env.PORT || 3000;
 
@@ -54,6 +54,9 @@ function parseSchedulePage($schedulePage) {
             const $column = $schedulePage(column);
             event[columnsName[index]] = toTitleCase($column.text().replace(/\n/gi, ' ').replace(/\t/gi, '').trim());
         });
+        if (Object.keys(event).length < 6) {
+            return;
+        }
         return event;
     }).get().filter((event) => !!event.day);
 }
