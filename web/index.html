@@ -30,7 +30,7 @@
             <input type="text" v-model="search" placeholder="search"><br>
             <ul class="au-event-list" v-if="arenavisionResults.length">
                 <li class="au-event" v-for="event of arenavisionResults">
-                    {{ event.day }} - {{ event.sport }} - {{ event.competition }} - {{ event.title }} -
+                    <span style="text-transform: uppercase">{{ event.time }}</span> - {{ event.day }} - {{ event.sport }} - {{ event.competition }} - {{ event.title }} -
                     <template v-for="(channel, index) of event.channels">
                         <a :href="channel.url">{{ channel.language }}</a>
                         <template v-if="index !== event.channels.length - 1">
