@@ -1,0 +1,12 @@
+[package]
+name = "arenavision"
+version = "0.1.0"
+authors = ["Alberto Luna <alberto.luna.95@gmail.com>"]
+
+[profile.release]
+lto = true
+
+[dependencies]
+reqwest = "0.8.6"
+chrono = "0.4"
+scraper = "0.6.0"
