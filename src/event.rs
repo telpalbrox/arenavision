@@ -1,4 +1,4 @@
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub struct AuChannel {
     number: u32,
     language: String,
@@ -15,7 +15,7 @@ impl AuChannel {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub struct AuEvent {
     pub day: String,
     pub time: String,

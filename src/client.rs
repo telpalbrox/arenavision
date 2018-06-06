@@ -1,6 +1,7 @@
 extern crate reqwest;
 extern crate chrono;
 extern crate scraper;
+extern crate inflector;
 
 use std::env;
 use std::collections::HashMap;
@@ -8,6 +9,7 @@ use client::chrono::Duration;
 use client::reqwest::Method;
 use client::reqwest::header::Headers;
 use client::scraper::{Html, Selector, ElementRef};
+use client::inflector::cases::titlecase::to_title_case;
 use event::{AuChannel, AuEvent};
 
 pub struct Client {
@@ -47,7 +49,10 @@ impl Client {
         request_builder.send()?.text()
     }
 
-    pub fn precache_channels(&mut self) {
+    pub fn precache_channels(&mut self, silent: bool) {
+        if !silent {
+            println!("Start precache");
+        }
         let document = Html::parse_document(&self.get_schedule_html().unwrap());
         if self.channels_urls.len() == 0 {
             for channel_link_element in document.select(&Selector::parse("li.expanded li a").unwrap()) {
@@ -56,6 +61,9 @@ impl Client {
                 let channel_acestream_url = channel_document.select(&Selector::parse("p.auto-style1 a").unwrap()).next().unwrap().value().attr("href").unwrap();
                 self.channels_urls.insert(channel_link_element.text().collect::<String>().replace("ArenaVision ", "").parse().unwrap(), String::from(channel_acestream_url));
             }
+        }
+        if !silent {
+            println!("Finish precache");
         }
     }
 
@@ -92,10 +100,10 @@ impl Client {
         Some(AuEvent {
             day: column_values[0].to_owned(),
             time: column_values[1].to_owned(),
-            sport: column_values[2].to_owned(),
-            competition: column_values[3].to_owned(),
-            title: column_values[4].to_owned(),
-            channels: channels
+            sport: to_title_case(&column_values[2]).to_owned(),
+            competition: to_title_case(&column_values[3]).to_owned(),
+            title: to_title_case(&column_values[4]).to_owned(),
+            channels,
         })
     }
 
@@ -112,7 +120,7 @@ impl Client {
                 au_channels.push(AuChannel::new(
                     channel_number,
                     &channel_language.replace('[', "").replace(']', ""),
-                    self.channels_urls.get(&channel_number).unwrap_or(&String::from(""))
+                    self.channels_urls.get(&channel_number).unwrap_or(&String::from("")),
                 ));
             }
         }
