@@ -34,7 +34,7 @@ impl Client {
         format!("{}/{}", self.url, self.schedule_path)
     }
 
-    pub fn get_schedule_html(&self) -> Result<String, reqwest::Error> {
+    fn get_schedule_html(&self) -> Result<String, reqwest::Error> {
         self.get_url_html(&self.get_schedule_url())
     }
 
@@ -47,7 +47,7 @@ impl Client {
         request_builder.send()?.text()
     }
 
-    pub fn get_events(&mut self) -> Vec<AuEvent> {
+    pub fn precache_channels(&mut self) {
         let document = Html::parse_document(&self.get_schedule_html().unwrap());
         if self.channels_urls.len() == 0 {
             for channel_link_element in document.select(&Selector::parse("li.expanded li a").unwrap()) {
@@ -57,6 +57,10 @@ impl Client {
                 self.channels_urls.insert(channel_link_element.text().collect::<String>().replace("ArenaVision ", "").parse().unwrap(), String::from(channel_acestream_url));
             }
         }
+    }
+
+    pub fn get_events(&self) -> Vec<AuEvent> {
+        let document = Html::parse_document(&self.get_schedule_html().unwrap());
         let mut events: Vec<AuEvent> = Vec::new();
         for (i, row) in document.select(&Selector::parse("table.auto-style1 tr").unwrap()).enumerate() {
             if i == 0 {
@@ -108,7 +112,7 @@ impl Client {
                 au_channels.push(AuChannel::new(
                     channel_number,
                     &channel_language.replace('[', "").replace(']', ""),
-                    self.channels_urls.get(&channel_number).unwrap()
+                    self.channels_urls.get(&channel_number).unwrap_or(&String::from(""))
                 ));
             }
         }
