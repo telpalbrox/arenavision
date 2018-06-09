@@ -5,6 +5,7 @@ use std::sync::Arc;
 use std::env;
 use web::serde_json::Error;
 use web::actix_web::{server, App, HttpRequest, HttpResponse};
+use web::actix_web::middleware::cors::Cors;
 use client::Client;
 
 struct AppState {
@@ -28,7 +29,11 @@ pub fn start() {
     server::new(move || {
         client.get_events();
         App::with_state(AppState { client: Arc::clone(&client) })
-            .resource("/", |r| r.f(index))
+            .configure(|app| {
+                Cors::for_app(app)
+                    .resource("/", |r| r.f(index))
+                    .register()
+            })
     })
     .bind(&format!("{}:{}", "0.0.0.0", port))
     .expect(&format!("Can not bind to port {}", port))
