@@ -1,21 +1,3 @@
-.app {
-    padding: 60px 8px 8px;
-}
-
-@media all and (max-width: 60em) {
-    .au-menu-button {
-        width: 100%;
-    }
-}
-
-.au-loading {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    width: 100vw;
-}
-
 .au-menu-button.au-menu-button-active,
 .au-menu-button.au-menu-button-active:focus,
 .au-menu-button.au-menu-button-active:hover {
