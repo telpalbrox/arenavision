@@ -26,7 +26,7 @@ impl Client {
 
     pub fn new() -> Client {
         Client {
-            url: env::var("ARENAVISION_URL").unwrap_or_else(|_| String::from("http://arenavision.in")),
+            url: env::var("ARENAVISION_URL").unwrap_or_else(|_| String::from("http://arenavision.biz")),
             schedule_path: env::var("ARENAVISION_SCHEDULE_PATH").unwrap_or_else(|_| String::from("guide")),
             channels_urls: HashMap::new(),
         }
@@ -114,13 +114,18 @@ impl Client {
         let mut au_channels: Vec<AuChannel> = Vec::new();
         let channels = channels_laguages_iterator.zip(channels_numbers_iterator);
         for (channel_numbers, channel_language) in channels {
+            let mut added_urls: Vec<String> = Vec::new();
             for channel_number in channel_numbers.split("-") {
                 let channel_number: u32 = channel_number.parse().unwrap();
-
+                let channel_url = self.channels_urls.get(&channel_number).unwrap();
+                if added_urls.contains(channel_url) {
+                    continue;
+                }
+                added_urls.push(channel_url.to_owned());
                 au_channels.push(AuChannel::new(
                     channel_number,
                     &channel_language.replace('[', "").replace(']', ""),
-                    self.channels_urls.get(&channel_number).unwrap_or(&String::from("")),
+                    channel_url,
                 ));
             }
         }
