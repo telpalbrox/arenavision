@@ -1,0 +1,17 @@
+[package]
+name = "arenavision"
+version = "0.1.0"
+authors = ["Alberto Luna <alberto.luna.95@gmail.com>"]
+
+[profile.release]
+lto = true
+
+[dependencies]
+reqwest = "0.9.2"
+chrono = "0.4.6"
+scraper = "0.7.0"
+actix-web = "0.7.8"
+serde = "1.0.79"
+serde_json = "1.0.31"
+serde_derive = "1.0.79"
+Inflector = "0.11.3"

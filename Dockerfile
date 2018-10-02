@@ -1,12 +1,8 @@
-FROM node:8
+FROM rust:1.28.0
 
-RUN mkdir -p /usr/src/app
-WORKDIR /usr/src/app
+WORKDIR /usr/src/arenavision
+COPY . .
 
-COPY package.json /usr/src/app/
-RUN npm install
+RUN cargo install
 
-COPY . /usr/src/app
-
-EXPOSE 3000
-CMD ["npm", "start"]
+CMD ["arenavision"]
