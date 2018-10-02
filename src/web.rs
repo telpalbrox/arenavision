@@ -13,7 +13,7 @@ struct AppState {
     client: Arc<Client>
 }
 
-fn json(req: HttpRequest<AppState>) -> Result<HttpResponse, Error> {
+fn json(req: &HttpRequest<AppState>) -> Result<HttpResponse, Error> {
     let events = req.state().client.get_events();
     let body = serde_json::to_string(&events)?;
     Ok(HttpResponse::Ok()
@@ -21,7 +21,7 @@ fn json(req: HttpRequest<AppState>) -> Result<HttpResponse, Error> {
         .body(body))
 }
 
-fn index(_req: HttpRequest<AppState>) -> Result<fs::NamedFile, io::Error> {
+fn index(_req: &HttpRequest<AppState>) -> Result<fs::NamedFile, io::Error> {
     fs::NamedFile::open("static/index.html")
 }
 
@@ -37,9 +37,9 @@ pub fn start() {
             .configure(|app| {
                 Cors::for_app(app)
                     .resource("/json", |r| r.f(json))
-                    .register()
                     .resource("/", |r| r.f(index))
-                    .handler("/static", fs::StaticFiles::new("static"))
+                    .register()
+                    .handler("/static", fs::StaticFiles::new("./static").unwrap())
             })
     })
     .bind(&format!("{}:{}", "0.0.0.0", port))

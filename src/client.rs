@@ -6,8 +6,7 @@ extern crate inflector;
 use std::env;
 use std::collections::HashMap;
 use client::chrono::Duration;
-use client::reqwest::Method;
-use client::reqwest::header::Headers;
+use client::reqwest::header::{COOKIE};
 use client::scraper::{Html, Selector, ElementRef};
 use client::inflector::cases::titlecase::to_title_case;
 use event::{AuChannel, AuEvent};
@@ -42,10 +41,7 @@ impl Client {
 
     fn get_url_html(&self, url: &str) -> Result<String, reqwest::Error> {
         let http_client = reqwest::Client::new();
-        let mut request_builder = http_client.request(Method::Get, url);
-        let mut headers: Headers = Headers::new();
-        headers.set_raw("Cookie", Client::get_cookie());
-        request_builder.headers(headers);
+        let request_builder = http_client.get(url).header(COOKIE, Client::get_cookie());
         request_builder.send()?.text()
     }
 
