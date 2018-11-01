@@ -42,7 +42,11 @@ impl Client {
     fn get_url_html(&self, url: &str) -> Result<String, reqwest::Error> {
         let http_client = reqwest::Client::new();
         let request_builder = http_client.get(url).header(COOKIE, Client::get_cookie());
-        request_builder.send()?.text()
+        let mut response = request_builder.send()?;
+        if !response.status().is_success() {
+            return Ok(String::from(""));
+        }
+        response.text()
     }
 
     pub fn precache_channels(&mut self, silent: bool) {
@@ -53,7 +57,11 @@ impl Client {
         if self.channels_urls.len() == 0 {
             for channel_link_element in document.select(&Selector::parse("li.expanded li a").unwrap()) {
                 let channel_url = channel_link_element.value().attr("href").unwrap();
-                let channel_document = Html::parse_document(&self.get_url_html(channel_url).unwrap());
+                let channel_html = &self.get_url_html(channel_url).expect("Error getting channel html");
+                if channel_html.len() == 0 {
+                    continue;
+                }
+                let channel_document = Html::parse_document(&channel_html);
                 let channel_acestream_url = channel_document.select(&Selector::parse("p.auto-style1 a").unwrap()).next().unwrap().value().attr("href").unwrap();
                 self.channels_urls.insert(channel_link_element.text().collect::<String>().replace("ArenaVision ", "").parse().unwrap(), String::from(channel_acestream_url));
             }
