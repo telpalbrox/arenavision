@@ -4,6 +4,12 @@
     <title>Arenavision Unofficial</title>
     <meta name="viewport" content="width=device-width,initial-scale=1.0">
     <style>
+        body {
+            margin: 0;
+        }
+        .au-nav {
+            display: none;
+        }
         .app {
             padding: 60px 8px 8px;
         }
@@ -96,12 +102,13 @@
             }
         }
     </style>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/picnicss/6.3.2/picnic.min.css">
-    <link rel="stylesheet" href="/static/app.css">
+    <link rel="preload" as="fetch" crossorigin href="/json">
+    <link rel="preload" as="style" onload="this.rel = 'stylesheet';document.querySelector('.au-nav').style.display = 'block'" href="https://cdn.jsdelivr.net/picnicss/6.3.2/picnic.min.css">
+    <link rel="preload" as="style" onload="this.rel = 'stylesheet'" href="/static/app.css">
 </head>
 <body>
     <div class="app">
-        <nav>
+        <nav class="au-nav">
             <div class="brand">
                 <span>Arenavision Unofficial</span>
             </div>
