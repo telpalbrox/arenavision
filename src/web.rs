@@ -1,16 +1,19 @@
 extern crate actix_web;
 extern crate serde_json;
+extern crate handlebars;
 
 use std::sync::Arc;
 use std::env;
-use std::io;
+use std::collections::BTreeMap;
 use web::serde_json::Error;
 use web::actix_web::{server, App, HttpRequest, HttpResponse, fs};
 use web::actix_web::middleware::cors::Cors;
+use self::handlebars::Handlebars;
 use client::Client;
 
 struct AppState {
-    client: Arc<Client>
+    client: Arc<Client>,
+    handlebars: Arc<Handlebars>
 }
 
 fn json(req: &HttpRequest<AppState>) -> Result<HttpResponse, Error> {
@@ -21,19 +24,30 @@ fn json(req: &HttpRequest<AppState>) -> Result<HttpResponse, Error> {
         .body(body))
 }
 
-fn index(_req: &HttpRequest<AppState>) -> Result<fs::NamedFile, io::Error> {
-    fs::NamedFile::open("static/index.html")
+fn index(req: &HttpRequest<AppState>) -> HttpResponse {
+    let handlebars = &req.state().handlebars;
+    let data: BTreeMap<&str, &str> = BTreeMap::new();
+    let body = handlebars.render("index", &data).unwrap();
+    HttpResponse::Ok()
+        .content_type("text/html; charset=utf-8")
+        .body(body)
 }
 
 pub fn start() {
     let port = env::var("PORT").unwrap_or(String::from("3000"));
     println!("Server will listen on port {}", port);
+
     let mut client = Client::new();
     client.precache_channels(false);
     let client = Arc::new(client);
+
+    let mut handlebars = Handlebars::new();
+    handlebars.register_template_file("index", "./templates/index.hbs").unwrap();
+    let handlebars = Arc::new(handlebars);
+
     server::new(move || {
         client.get_events();
-        App::with_state(AppState { client: Arc::clone(&client) })
+        App::with_state(AppState { client: Arc::clone(&client), handlebars: Arc::clone(&handlebars) })
             .configure(|app| {
                 Cors::for_app(app)
                     .resource("/json", |r| r.f(json))
