@@ -103,8 +103,18 @@
         }
     </style>
     <link rel="preload" as="fetch" crossorigin href="/json">
-    <link rel="preload" as="style" onload="this.rel = 'stylesheet';document.querySelector('.au-nav').style.display = 'block'" href="https://cdn.jsdelivr.net/picnicss/6.3.2/picnic.min.css">
-    <link rel="preload" as="style" onload="this.rel = 'stylesheet'" href="/static/app.css">
+    <link rel="preload" as="style" onload="this.rel='stylesheet';document.querySelector('.au-nav').style.display='block'" href="https://cdn.jsdelivr.net/picnicss/6.3.2/picnic.min.css">
+    <link rel="preload" as="style" onload="this.rel='stylesheet'" href="/static/app.css">
+    <script>
+        (() => {
+            const supportsPreload = document.createElement('link').relList.supports('preload');
+            if (!supportsPreload) {
+                Array.from(document.querySelectorAll('link[rel=preload][as=style]')).forEach(link => {
+                    link.rel = 'stylesheet';
+                });
+            }
+        })();
+    </script>
 </head>
 <body>
     <div class="app">
