@@ -121,7 +121,10 @@ impl Client {
             let mut added_urls: Vec<String> = Vec::new();
             for channel_number in channel_numbers.split("-") {
                 let channel_number: u32 = channel_number.parse().unwrap();
-                let channel_url = self.channels_urls.get(&channel_number).unwrap();
+                let channel_url = match self.channels_urls.get(&channel_number) {
+                    Some(url) => url,
+                    None => continue
+                };
                 if added_urls.contains(channel_url) {
                     continue;
                 }

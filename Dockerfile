@@ -1,4 +1,4 @@
-FROM rust:1.28.0
+FROM rust:1.33.0
 
 WORKDIR /usr/src/arenavision
 COPY . .
