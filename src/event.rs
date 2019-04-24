@@ -10,7 +10,7 @@ impl AuChannel {
         AuChannel {
             number,
             language: String::from(language),
-            url: String::from(url)
+            url: String::from(url),
         }
     }
 }
@@ -22,5 +22,5 @@ pub struct AuEvent {
     pub sport: String,
     pub competition: String,
     pub title: String,
-    pub channels: Vec<AuChannel>
+    pub channels: Vec<AuChannel>,
 }

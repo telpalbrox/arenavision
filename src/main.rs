@@ -1,8 +1,9 @@
-#[macro_use] extern crate serde_derive;
+#[macro_use]
+extern crate serde_derive;
 
+mod cli;
 mod client;
 mod event;
-mod cli;
 mod web;
 
 use std::env;

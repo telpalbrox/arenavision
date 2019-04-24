@@ -1,15 +1,15 @@
-extern crate reqwest;
 extern crate chrono;
-extern crate scraper;
 extern crate inflector;
+extern crate reqwest;
+extern crate scraper;
 
-use std::env;
-use std::collections::HashMap;
 use client::chrono::Duration;
-use client::reqwest::header::{COOKIE};
-use client::scraper::{Html, Selector, ElementRef};
 use client::inflector::cases::titlecase::to_title_case;
+use client::reqwest::header::COOKIE;
+use client::scraper::{ElementRef, Html, Selector};
 use event::{AuChannel, AuEvent};
+use std::collections::HashMap;
+use std::env;
 
 pub struct Client {
     url: String,
@@ -25,8 +25,10 @@ impl Client {
 
     pub fn new() -> Client {
         Client {
-            url: env::var("ARENAVISION_URL").unwrap_or_else(|_| String::from("http://arenavision.biz")),
-            schedule_path: env::var("ARENAVISION_SCHEDULE_PATH").unwrap_or_else(|_| String::from("guide")),
+            url: env::var("ARENAVISION_URL")
+                .unwrap_or_else(|_| String::from("http://arenavision.biz")),
+            schedule_path: env::var("ARENAVISION_SCHEDULE_PATH")
+                .unwrap_or_else(|_| String::from("guide")),
             channels_urls: HashMap::new(),
         }
     }
@@ -55,15 +57,33 @@ impl Client {
         }
         let document = Html::parse_document(&self.get_schedule_html().unwrap());
         if self.channels_urls.len() == 0 {
-            for channel_link_element in document.select(&Selector::parse("li.expanded li a").unwrap()) {
+            for channel_link_element in
+                document.select(&Selector::parse("li.expanded li a").unwrap())
+            {
                 let channel_url = channel_link_element.value().attr("href").unwrap();
-                let channel_html = &self.get_url_html(channel_url).expect("Error getting channel html");
+                let channel_html = &self
+                    .get_url_html(channel_url)
+                    .expect("Error getting channel html");
                 if channel_html.len() == 0 {
                     continue;
                 }
                 let channel_document = Html::parse_document(&channel_html);
-                let channel_acestream_url = channel_document.select(&Selector::parse("p.auto-style1 a").unwrap()).next().unwrap().value().attr("href").unwrap();
-                self.channels_urls.insert(channel_link_element.text().collect::<String>().replace("ArenaVision ", "").parse().unwrap(), String::from(channel_acestream_url));
+                let channel_acestream_url = channel_document
+                    .select(&Selector::parse("p.auto-style1 a").unwrap())
+                    .next()
+                    .unwrap()
+                    .value()
+                    .attr("href")
+                    .unwrap();
+                self.channels_urls.insert(
+                    channel_link_element
+                        .text()
+                        .collect::<String>()
+                        .replace("ArenaVision ", "")
+                        .parse()
+                        .unwrap(),
+                    String::from(channel_acestream_url),
+                );
             }
         }
         if !silent {
@@ -74,7 +94,10 @@ impl Client {
     pub fn get_events(&self) -> Vec<AuEvent> {
         let document = Html::parse_document(&self.get_schedule_html().unwrap());
         let mut events: Vec<AuEvent> = Vec::new();
-        for (i, row) in document.select(&Selector::parse("table.auto-style1 tr").unwrap()).enumerate() {
+        for (i, row) in document
+            .select(&Selector::parse("table.auto-style1 tr").unwrap())
+            .enumerate()
+        {
             if i == 0 {
                 continue;
             }
@@ -113,8 +136,12 @@ impl Client {
 
     fn parse_channels(&self, channels: &String) -> Vec<AuChannel> {
         let channels = channels.replace('\n', " ").replace('\t', "");
-        let channels_numbers_iterator = channels.split_whitespace().filter(|channel| channel.starts_with("["));
-        let channels_laguages_iterator = channels.split_whitespace().filter(|channel| !channel.starts_with("["));
+        let channels_numbers_iterator = channels
+            .split_whitespace()
+            .filter(|channel| channel.starts_with("["));
+        let channels_laguages_iterator = channels
+            .split_whitespace()
+            .filter(|channel| !channel.starts_with("["));
         let mut au_channels: Vec<AuChannel> = Vec::new();
         let channels = channels_laguages_iterator.zip(channels_numbers_iterator);
         for (channel_numbers, channel_language) in channels {
@@ -123,7 +150,7 @@ impl Client {
                 let channel_number: u32 = channel_number.parse().unwrap();
                 let channel_url = match self.channels_urls.get(&channel_number) {
                     Some(url) => url,
-                    None => continue
+                    None => continue,
                 };
                 if added_urls.contains(channel_url) {
                     continue;

@@ -1,16 +1,16 @@
 extern crate actix_web;
 extern crate serde_json;
 
-use std::sync::Arc;
+use client::Client;
 use std::env;
 use std::io;
-use web::serde_json::Error;
-use web::actix_web::{server, App, HttpRequest, HttpResponse, fs};
+use std::sync::Arc;
 use web::actix_web::middleware::cors::Cors;
-use client::Client;
+use web::actix_web::{fs, server, App, HttpRequest, HttpResponse};
+use web::serde_json::Error;
 
 struct AppState {
-    client: Arc<Client>
+    client: Arc<Client>,
 }
 
 fn json(req: &HttpRequest<AppState>) -> Result<HttpResponse, Error> {
@@ -33,14 +33,16 @@ pub fn start() {
     let client = Arc::new(client);
     server::new(move || {
         client.get_events();
-        App::with_state(AppState { client: Arc::clone(&client) })
-            .configure(|app| {
-                Cors::for_app(app)
-                    .resource("/json", |r| r.f(json))
-                    .resource("/", |r| r.f(index))
-                    .register()
-                    .handler("/static", fs::StaticFiles::new("./static").unwrap())
-            })
+        App::with_state(AppState {
+            client: Arc::clone(&client),
+        })
+        .configure(|app| {
+            Cors::for_app(app)
+                .resource("/json", |r| r.f(json))
+                .resource("/", |r| r.f(index))
+                .register()
+                .handler("/static", fs::StaticFiles::new("./static").unwrap())
+        })
     })
     .bind(&format!("{}:{}", "0.0.0.0", port))
     .expect(&format!("Can not bind to port {}", port))
