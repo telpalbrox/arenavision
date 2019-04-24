@@ -26,7 +26,7 @@ impl Client {
     pub fn new() -> Client {
         Client {
             url: env::var("ARENAVISION_URL")
-                .unwrap_or_else(|_| String::from("http://arenavision.biz")),
+                .unwrap_or_else(|_| String::from("http://arenavision.us")),
             schedule_path: env::var("ARENAVISION_SCHEDULE_PATH")
                 .unwrap_or_else(|_| String::from("guide")),
             channels_urls: HashMap::new(),
@@ -61,29 +61,43 @@ impl Client {
                 document.select(&Selector::parse("li.expanded li a").unwrap())
             {
                 let channel_url = channel_link_element.value().attr("href").unwrap();
+                let channel_number = channel_link_element
+                    .text()
+                    .collect::<String>()
+                    .replace("ArenaVision ", "")
+                    .parse()
+                    .unwrap();
                 let channel_html = &self
                     .get_url_html(channel_url)
-                    .expect("Error getting channel html");
+                    .expect(format!("Error getting channel {} html", channel_number).as_str());
                 if channel_html.len() == 0 {
                     continue;
                 }
                 let channel_document = Html::parse_document(&channel_html);
-                let channel_acestream_url = channel_document
-                    .select(&Selector::parse("p.auto-style1 a").unwrap())
+                let channel_iframe = match channel_document
+                    .select(&Selector::parse(".field-item > iframe").unwrap())
                     .next()
-                    .unwrap()
-                    .value()
-                    .attr("href")
-                    .unwrap();
-                self.channels_urls.insert(
-                    channel_link_element
-                        .text()
-                        .collect::<String>()
-                        .replace("ArenaVision ", "")
-                        .parse()
-                        .unwrap(),
-                    String::from(channel_acestream_url),
+                {
+                    Some(element) => element.value(),
+                    None => continue,
+                };
+                let channel_iframe_src = channel_iframe.attr("src").expect(
+                    format!(
+                        "video iframe for channel {} has no src attribute",
+                        channel_number
+                    )
+                    .as_str(),
                 );
+                let channel_acestream_id = channel_iframe_src.split("id=").nth(1).expect(
+                    format!(
+                        "unexpected channel iframe src attribute for channel {}",
+                        channel_number
+                    )
+                    .as_str(),
+                );
+                let channel_acestream_url = format!("acestream://{}", channel_acestream_id);
+                self.channels_urls
+                    .insert(channel_number, String::from(channel_acestream_url));
             }
         }
         if !silent {
@@ -105,6 +119,9 @@ impl Client {
                 Some(event) => events.push(event),
                 None => {}
             }
+        }
+        if events.len() == 0 {
+            panic!("No events found, maybe arenavision url changed?");
         }
         events
     }
