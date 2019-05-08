@@ -109,7 +109,7 @@ impl Client {
         let document = Html::parse_document(&self.get_schedule_html().unwrap());
         let mut events: Vec<AuEvent> = Vec::new();
         for (i, row) in document
-            .select(&Selector::parse("table.auto-style1 tr").unwrap())
+            .select(&Selector::parse("table.auto-style2 tr").unwrap())
             .enumerate()
         {
             if i == 0 {
