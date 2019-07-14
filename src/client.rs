@@ -37,25 +37,38 @@ impl Client {
         format!("{}/{}", self.url, self.schedule_path)
     }
 
-    fn get_schedule_html(&self) -> Result<String, reqwest::Error> {
-        self.get_url_html(&self.get_schedule_url())
+    fn get_schedule_html(&self) -> String {
+        let schedule_html = self.get_url_html(&self.get_schedule_url());
+        if schedule_html.len() == 0 {
+            panic!("Error getting schedule html!");
+        }
+        schedule_html
     }
 
-    fn get_url_html(&self, url: &str) -> Result<String, reqwest::Error> {
+    fn get_url_html(&self, url: &str) -> String {
         let http_client = reqwest::Client::new();
         let request_builder = http_client.get(url).header(COOKIE, Client::get_cookie());
-        let mut response = request_builder.send()?;
-        if !response.status().is_success() {
-            return Ok(String::from(""));
-        }
-        response.text()
+        match request_builder.send() {
+            Ok(mut response) => {
+                if !response.status().is_success() {
+                    println!("HTTP error {} when getting channel {}", response.status(), url);
+                    return String::from("");
+                }
+                return response.text().expect(format!("Error getting {} html", url).as_str());
+            },
+            Err(err) => {
+                println!("Error when getting channel {}", url);
+                println!("{}", err);
+                return String::from("");
+            }
+        };
     }
 
     pub fn precache_channels(&mut self, silent: bool) {
         if !silent {
             println!("Start precache");
         }
-        let document = Html::parse_document(&self.get_schedule_html().unwrap());
+        let document = Html::parse_document(&self.get_schedule_html());
         if self.channels_urls.len() == 0 {
             for channel_link_element in
                 document.select(&Selector::parse("li.expanded li a").unwrap())
@@ -68,8 +81,7 @@ impl Client {
                     .parse()
                     .unwrap();
                 let channel_html = &self
-                    .get_url_html(channel_url)
-                    .expect(format!("Error getting channel {} html", channel_number).as_str());
+                    .get_url_html(channel_url);
                 if channel_html.len() == 0 {
                     continue;
                 }
@@ -106,7 +118,7 @@ impl Client {
     }
 
     pub fn get_events(&self) -> Vec<AuEvent> {
-        let document = Html::parse_document(&self.get_schedule_html().unwrap());
+        let document = Html::parse_document(&self.get_schedule_html());
         let mut events: Vec<AuEvent> = Vec::new();
         for (i, row) in document
             .select(&Selector::parse("table.auto-style2 tr").unwrap())
