@@ -12,8 +12,7 @@ use std::collections::HashMap;
 use std::env;
 
 pub struct Client {
-    url: String,
-    schedule_path: String,
+    url: String, 
     channels_urls: HashMap<u32, String>,
 }
 impl Client {
@@ -23,45 +22,60 @@ impl Client {
         format!("beget=begetok; expires={}; path=/", expire.to_rfc2822())
     }
 
-    pub fn new() -> Client {
-        Client {
-            url: env::var("ARENAVISION_URL")
-                .unwrap_or_else(|_| String::from("http://arenavision.us")),
-            schedule_path: env::var("ARENAVISION_SCHEDULE_PATH")
-                .unwrap_or_else(|_| String::from("guide")),
-            channels_urls: HashMap::new(),
-        }
-    }
-
-    fn get_schedule_url(&self) -> String {
-        format!("{}/{}", self.url, self.schedule_path)
-    }
-
-    fn get_schedule_html(&self) -> String {
-        let schedule_html = self.get_url_html(&self.get_schedule_url());
-        if schedule_html.len() == 0 {
-            panic!("Error getting schedule html!");
-        }
-        schedule_html
-    }
-
-    fn get_url_html(&self, url: &str) -> String {
+    fn get_url_html(url: &str) -> String {
         let http_client = reqwest::Client::new();
         let request_builder = http_client.get(url).header(COOKIE, Client::get_cookie());
         match request_builder.send() {
             Ok(mut response) => {
                 if !response.status().is_success() {
-                    println!("HTTP error {} when getting channel {}", response.status(), url);
+                    println!("HTTP error {} when getting url {}", response.status(), url);
                     return String::from("");
                 }
                 return response.text().expect(format!("Error getting {} html", url).as_str());
             },
             Err(err) => {
-                println!("Error when getting channel {}", url);
+                println!("Error when getting url {}", url);
                 println!("{}", err);
                 return String::from("");
             }
         };
+    }
+
+    pub fn new() -> Client {
+        Client {
+            url: env::var("ARENAVISION_URL")
+                .unwrap_or_else(|_| String::from("http://arenavision.biz")),
+            channels_urls: HashMap::new(),
+        }
+    }
+
+    fn get_schedule_path(&self) -> String {
+        let index_html = Client::get_url_html(self.url.as_str());
+        if index_html.len() == 0 {
+            panic!("Error getting arenavision home page!");
+        }
+        let index_document = Html::parse_document(index_html.as_str());
+        let guide_menu_entry_element = index_document.select(&Selector::parse(".menu .leaf a").unwrap()).find(|element| {
+            let text = element.text().collect::<String>();
+            text == "EVENTS GUIDE"
+        });
+        let path = match guide_menu_entry_element {
+            Some(element) => element.value().attr("href").expect("No href attribute in events guide link"),
+            None => return String::from("")
+        };
+        path.to_string()
+    }
+
+    fn get_schedule_url(&self) -> String {
+        format!("{}/{}", self.url, self.get_schedule_path())
+    }
+
+    fn get_schedule_html(&self) -> String {
+        let schedule_html = Client::get_url_html(&self.get_schedule_url());
+        if schedule_html.len() == 0 {
+            panic!("Error getting schedule html!");
+        }
+        schedule_html
     }
 
     pub fn precache_channels(&mut self, silent: bool) {
@@ -73,15 +87,15 @@ impl Client {
             for channel_link_element in
                 document.select(&Selector::parse("li.expanded li a").unwrap())
             {
-                let channel_url = channel_link_element.value().attr("href").unwrap();
+                let channel_path = channel_link_element.value().attr("href").unwrap();
                 let channel_number = channel_link_element
                     .text()
                     .collect::<String>()
                     .replace("ArenaVision ", "")
                     .parse()
                     .unwrap();
-                let channel_html = &self
-                    .get_url_html(channel_url);
+                let channel_url = format!("{}{}", self.url, channel_path);
+                let channel_html = Client::get_url_html(channel_url.as_str());
                 if channel_html.len() == 0 {
                     continue;
                 }
@@ -100,10 +114,25 @@ impl Client {
                     )
                     .as_str(),
                 );
+                // if it is an external url we send that back
+                if channel_iframe_src.starts_with("http") {
+                    self.channels_urls.insert(channel_number, channel_iframe_src.to_string());
+                    continue;
+                }
+                // if it is trying to open a url with acestream we send the .m3u8 url back
+                match channel_iframe_src.split("url=").nth(1) {
+                    Some(url) => {
+                        self.channels_urls.insert(channel_number, url.to_string());
+                        continue;
+                    },
+                    None => {}
+                }
+                // if it is an acestream id it we send the acestream:// url back
                 let channel_acestream_id = channel_iframe_src.split("id=").nth(1).expect(
                     format!(
-                        "unexpected channel iframe src attribute for channel {}",
-                        channel_number
+                        "unexpected channel iframe src attribute for channel {}\niframe URL: {}",
+                        channel_number,
+                        channel_iframe_src
                     )
                     .as_str(),
                 );
